@@ -10,6 +10,9 @@ A Python Telegram bot that creates a referral system for channel growth. Users c
 - **Real-time Updates**: Automatic notifications when people join or leave
 - **Reward System**: Users can claim rewards when reaching their target
 - **Admin Dashboard**: Statistics and management tools for administrators
+- **🌍 Multilingual Support**: Supports 15 languages for international growth
+- **Smart Language Detection**: Automatically detects user language from Telegram settings
+- **Interactive Language Selector**: Users can change language anytime with /language command
 
 ## Quick Setup
 
@@ -64,7 +67,12 @@ python main.py
 - `/status` - Check your referral progress
 - `/claim` - Claim your reward when target is reached
 - `/help` - Show help message
+- `/language` - Change language settings (15 languages supported)
 - `/admin_stats` - Admin statistics (admins only)
+
+## Supported Languages
+
+🇺🇸 English • 🇪🇸 Spanish • 🇫🇷 French • 🇩🇪 German • 🇮🇹 Italian • 🇵🇹 Portuguese • 🇷🇺 Russian • 🇸🇦 Arabic • 🇨🇳 Chinese • 🇯🇵 Japanese • 🇰🇷 Korean • 🇮🇳 Hindi • 🇹🇷 Turkish • 🇳🇱 Dutch • 🇵🇱 Polish
 
 ## Environment Variables
 

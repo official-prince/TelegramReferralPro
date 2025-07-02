@@ -110,6 +110,10 @@ The Telegram referral bot is now fully functional with all requested features:
 - Automatic handling of users joining/leaving the channel
 - Admin statistics dashboard
 - Complete database system for tracking users and referrals
+- **NEW: Multilingual support for 15 languages** for international channel growth
+- **NEW: Automatic language detection** from Telegram user settings
+- **NEW: Interactive language selector** with /language command
+- **NEW: Localized user experience** with native language messages
 
 ## User Preferences
 
