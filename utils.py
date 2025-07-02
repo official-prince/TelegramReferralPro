@@ -1,0 +1,69 @@
+import logging
+from typing import Optional
+from telegram import Bot, ChatMember
+from telegram.error import TelegramError
+
+logger = logging.getLogger(__name__)
+
+class TelegramUtils:
+    def __init__(self, bot: Bot, channel_id: str, channel_username: str):
+        self.bot = bot
+        self.channel_id = channel_id
+        self.channel_username = channel_username
+    
+    async def check_channel_membership(self, user_id: int) -> bool:
+        """Check if a user is a member of the channel"""
+        try:
+            member = await self.bot.get_chat_member(self.channel_id, user_id)
+            return member.status in [ChatMember.MEMBER, ChatMember.ADMINISTRATOR, ChatMember.OWNER]
+        except TelegramError as e:
+            logger.warning(f"Error checking membership for user {user_id}: {e}")
+            return False
+    
+    def get_channel_link(self) -> str:
+        """Get the channel invite link"""
+        if self.channel_username.startswith('@'):
+            return f"https://t.me/{self.channel_username[1:]}"
+        else:
+            return f"https://t.me/{self.channel_username}"
+    
+    async def get_chat_info(self) -> Optional[dict]:
+        """Get information about the channel"""
+        try:
+            chat = await self.bot.get_chat(self.channel_id)
+            return {
+                'title': chat.title,
+                'username': chat.username,
+                'member_count': await self.bot.get_chat_member_count(self.channel_id) if hasattr(chat, 'member_count') else None
+            }
+        except TelegramError as e:
+            logger.error(f"Error getting chat info: {e}")
+            return None
+    
+    async def send_message_safe(self, user_id: int, text: str, **kwargs) -> bool:
+        """Send a message with error handling"""
+        try:
+            await self.bot.send_message(user_id, text, **kwargs)
+            return True
+        except TelegramError as e:
+            logger.warning(f"Failed to send message to user {user_id}: {e}")
+            return False
+    
+    def is_admin(self, user_id: int, admin_user_ids: list) -> bool:
+        """Check if user is an admin"""
+        return user_id in admin_user_ids
+
+def setup_logging():
+    """Setup logging configuration"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('bot.log'),
+            logging.StreamHandler()
+        ]
+    )
+    
+    # Reduce telegram library logging
+    logging.getLogger('telegram').setLevel(logging.WARNING)
+    logging.getLogger('httpx').setLevel(logging.WARNING)
