@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import signal
+import sys
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram.error import TelegramError
 
@@ -13,7 +15,7 @@ from utils import TelegramUtils, setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-async def main():
+def main():
     """Main function to run the bot"""
     try:
         # Load configuration
@@ -47,7 +49,7 @@ async def main():
         if config.webhook_url:
             # Webhook mode
             logger.info(f"Starting bot in webhook mode on port {config.port}")
-            await application.run_webhook(
+            application.run_webhook(
                 listen="0.0.0.0",
                 port=config.port,
                 webhook_url=config.webhook_url,
@@ -56,11 +58,13 @@ async def main():
         else:
             # Polling mode
             logger.info("Starting bot in polling mode")
-            await application.run_polling(allowed_updates=["message", "chat_member"])
+            application.run_polling(allowed_updates=["message", "chat_member"])
     
+    except KeyboardInterrupt:
+        logger.info("Bot stopped by user")
     except Exception as e:
         logger.error(f"Failed to start bot: {e}")
-        raise
+        sys.exit(1)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
