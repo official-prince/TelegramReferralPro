@@ -99,7 +99,7 @@ class BotHandlers:
         """Send multilingual welcome message to existing channel members"""
         if not update.message or not user_data:
             return
-        bot_info = await update.get_bot()
+        bot_info = update.get_bot()
         referral_link = self.referral_system.create_referral_link(
             bot_info.username or "", user_data['referral_code']
         )
@@ -140,7 +140,7 @@ class BotHandlers:
         """Send welcome message to existing channel members"""
         if not update.message or not user_data:
             return
-        bot_info = await update.get_bot()
+        bot_info = update.get_bot()
         referral_link = self.referral_system.create_referral_link(
             bot_info.username or "", user_data['referral_code']
         )
@@ -225,7 +225,7 @@ class BotHandlers:
         
         # Check if reward already claimed
         if user['reward_claimed']:
-            bot_info = await update.get_bot()
+            bot_info = update.get_bot()
             referral_link = self.referral_system.create_referral_link(
                 bot_info.username, user['referral_code']
             )
@@ -248,7 +248,7 @@ class BotHandlers:
         # Claim reward
         self.db.mark_reward_claimed(user_id)
         
-        bot_info = await update.get_bot()
+        bot_info = update.get_bot()
         referral_link = self.referral_system.create_referral_link(
             bot_info.username, user['referral_code']
         )
