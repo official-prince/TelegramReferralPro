@@ -1,9 +1,17 @@
 import logging
+import re
 from typing import Optional
 from telegram import Bot, ChatMember
 from telegram.error import TelegramError
 
 logger = logging.getLogger(__name__)
+
+def escape_markdown(text: str) -> str:
+    """Escape Telegram Markdown special characters in a string."""
+    if not isinstance(text, str):
+        return text
+    # Escape these characters: _ * [ ] ( ) ~ ` > # + - = | { } . !
+    return re.sub(r'([_\*\[\]\(\)~`>#+\-=|{}.!])', r'\\\1', text)
 
 class TelegramUtils:
     def __init__(self, bot: Bot, channel_id: str, channel_username: str):

@@ -5,7 +5,7 @@ from telegram.constants import ParseMode
 from database import Database
 from referral_system import ReferralSystem
 from messages import Messages
-from utils import TelegramUtils
+from utils import TelegramUtils, setup_logging, escape_markdown
 from config import BotConfig
 from languages import LanguageManager, MultilingualMessages, SupportedLanguage
 
@@ -79,7 +79,7 @@ class BotHandlers:
         """Send multilingual welcome message to new users"""
         if not update.message:
             return
-        channel_link = self.telegram_utils.get_channel_link()
+        channel_link = escape_markdown(self.telegram_utils.get_channel_link())
         message = self.multilingual_messages.get_message(
             user_lang, "welcome_new_user", channel_link=channel_link
         )
@@ -89,7 +89,7 @@ class BotHandlers:
         """Send multilingual welcome message to referred users"""
         if not update.message:
             return
-        channel_link = self.telegram_utils.get_channel_link()
+        channel_link = escape_markdown(self.telegram_utils.get_channel_link())
         message = self.multilingual_messages.get_message(
             user_lang, "referral_welcome", channel_link=channel_link
         )
@@ -100,13 +100,11 @@ class BotHandlers:
         if not update.message or not user_data:
             return
         bot_info = update.get_bot()
-        referral_link = self.referral_system.create_referral_link(
+        referral_link = escape_markdown(self.referral_system.create_referral_link(
             bot_info.username or "", user_data['referral_code']
-        )
-        
+        ))
         chat_info = await self.telegram_utils.get_chat_info()
-        channel_name = chat_info['title'] if chat_info else "our channel"
-        
+        channel_name = escape_markdown(chat_info['title']) if chat_info else "our channel"
         message = self.multilingual_messages.get_message(
             user_lang, "welcome_existing_member",
             channel_name=channel_name,
