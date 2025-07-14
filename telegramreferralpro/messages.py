@@ -15,14 +15,15 @@ Click the link above to join the channel, then come back here.
     WELCOME_EXISTING_MEMBER = """
 🎉 Welcome back! I can see you're already a member of {channel_name}.
 
-Here's your unique referral link:
-{referral_link}
+
+Here's your referral link (channel invite):
+{channel_link}
 
 📋 **Your Mission:**
 Share this link with friends and get {target} people to join the channel using your link to earn your reward!
 
 🔗 **How it works:**
-1. Share your referral link with friends
+1. Copy and share your referral link with friends
 2. When they click it and join the channel, you get credit
 3. Reach {target} successful referrals to claim your reward
 
@@ -32,14 +33,15 @@ Use /status to check your progress anytime!
     CHANNEL_JOINED_SUCCESS = """
 ✅ Great! You've successfully joined {channel_name}!
 
-Here's your unique referral link:
-{referral_link}
+
+Here's your referral link (channel invite):
+{channel_link}
 
 📋 **Your Mission:**
-Share this link with friends and get {target} people to join the channel using your link to earn your reward!
+Copy and share this link with friends and get {target} people to join the channel using your link to earn your reward!
 
 🔗 **How it works:**
-1. Share your referral link with friends
+1. Copy and share your referral link with friends
 2. When they click it and join the channel, you get credit
 3. Reach {target} successful referrals to claim your reward
 
@@ -86,7 +88,7 @@ Use /claim to get your reward!
 
 Thank you for helping grow our community! Keep sharing your referral link to help even more people discover our channel.
 
-Your referral link is still active: {referral_link}
+Your referral link is still active: {channel_link}
 """
     
     HELP_MESSAGE = """
@@ -99,7 +101,7 @@ Your referral link is still active: {referral_link}
 
 📋 **How the referral system works:**
 1. Get your unique referral link from /start
-2. Share it with friends
+2. Copy the link and share it with friends
 3. When friends join using your link, you get credit
 4. Reach the target number of referrals to earn rewards
 5. Use /claim to get your reward
@@ -122,7 +124,7 @@ After joining, come back and use /start again.
     ERROR_REWARD_ALREADY_CLAIMED = """
 ✅ You've already claimed your reward!
 
-Your referral link is still active if you want to keep helping grow the community: {referral_link}
+Your referral link is still active if you want to keep helping grow the community: {channel_link}
 """
     
     ERROR_REWARD_NOT_AVAILABLE = """

@@ -43,3 +43,48 @@
 2025-07-14 02:55:52,728 - telegramreferralpro.bot_handlers - WARNING - Referral failed for user 6723278802: You cannot refer yourself
 2025-07-14 02:56:04,961 - telegramreferralpro.bot_handlers - INFO - User 6723278802 left the channel
 2025-07-14 02:56:11,765 - telegramreferralpro.bot_handlers - INFO - User 6723278802 joined the channel
+2025-07-14 03:49:46,429 - __main__ - INFO - Configuration loaded successfully
+2025-07-14 03:49:46,430 - telegramreferralpro.database - INFO - Database initialized successfully
+2025-07-14 03:49:46,430 - __main__ - INFO - Database initialized
+2025-07-14 03:49:46,430 - __main__ - INFO - Referral system initialized
+2025-07-14 03:49:46,516 - telegramreferralpro.languages - INFO - Language table initialized successfully
+2025-07-14 03:49:46,516 - __main__ - INFO - Bot handlers registered
+2025-07-14 03:49:46,517 - __main__ - INFO - Starting bot in polling mode
+2025-07-14 03:58:05,127 - telegramreferralpro.bot_handlers - INFO - User 6723278802 left the channel
+2025-07-14 03:59:38,568 - telegramreferralpro.bot_handlers - INFO - User 6723278802 joined the channel
+2025-07-14 04:00:54,656 - telegramreferralpro.bot_handlers - INFO - User 6723278802 (None) started the bot
+2025-07-14 04:00:54,706 - telegramreferralpro.bot_handlers - WARNING - Referral failed for user 6723278802: You cannot refer yourself
+2025-07-14 04:01:33,328 - telegramreferralpro.bot_handlers - INFO - User 6012843412 (Prince_edie) started the bot
+2025-07-14 04:04:03,929 - telegramreferralpro.bot_handlers - INFO - User 7221308385 left the channel
+2025-07-14 04:04:10,253 - telegramreferralpro.bot_handlers - INFO - User 7221308385 joined the channel
+2025-07-14 04:04:17,933 - telegramreferralpro.bot_handlers - INFO - User 7221308385 (stoplayingg) started the bot
+2025-07-14 04:04:17,965 - telegramreferralpro.bot_handlers - WARNING - Referral failed for user 7221308385: You cannot refer yourself
+2025-07-14 04:04:50,242 - telegramreferralpro.bot_handlers - INFO - User 7221308385 (stoplayingg) started the bot
+2025-07-14 04:04:50,279 - telegramreferralpro.bot_handlers - WARNING - Referral failed for user 7221308385: You cannot refer yourself
+2025-07-14 04:28:52,155 - __main__ - INFO - Configuration loaded successfully
+2025-07-14 04:28:52,156 - telegramreferralpro.database - INFO - Database initialized successfully
+2025-07-14 04:28:52,156 - __main__ - INFO - Database initialized
+2025-07-14 04:28:52,156 - __main__ - INFO - Referral system initialized
+2025-07-14 04:28:52,242 - telegramreferralpro.languages - INFO - Language table initialized successfully
+2025-07-14 04:28:52,243 - __main__ - INFO - Bot handlers registered
+2025-07-14 04:28:52,243 - __main__ - INFO - Starting bot in polling mode
+2025-07-14 04:28:52,345 - telegramreferralpro.bot_handlers - INFO - User 6723278802 left the channel
+2025-07-14 04:29:18,198 - telegramreferralpro.bot_handlers - INFO - User 6723278802 joined the channel
+2025-07-14 04:29:27,703 - telegramreferralpro.bot_handlers - INFO - User 6723278802 (None) started the bot
+2025-07-14 04:29:27,736 - telegramreferralpro.bot_handlers - WARNING - Referral failed for user 6723278802: You cannot refer yourself
+2025-07-14 04:29:27,764 - telegramreferralpro.languages - WARNING - Missing format key 'referral_link' for message welcome_existing_member in language en
+2025-07-14 04:32:27,023 - telegramreferralpro.bot_handlers - INFO - User 6723278802 (None) started the bot
+2025-07-14 04:32:27,355 - telegramreferralpro.languages - WARNING - Missing format key 'referral_link' for message welcome_existing_member in language en
+2025-07-14 04:32:54,203 - __main__ - INFO - Configuration loaded successfully
+2025-07-14 04:32:54,204 - telegramreferralpro.database - INFO - Database initialized successfully
+2025-07-14 04:32:54,204 - __main__ - INFO - Database initialized
+2025-07-14 04:32:54,204 - __main__ - INFO - Referral system initialized
+2025-07-14 04:32:54,312 - telegramreferralpro.languages - INFO - Language table initialized successfully
+2025-07-14 04:32:54,312 - __main__ - INFO - Bot handlers registered
+2025-07-14 04:32:54,312 - __main__ - INFO - Starting bot in polling mode
+2025-07-14 04:32:54,397 - telegramreferralpro.bot_handlers - INFO - User 6723278802 (None) started the bot
+2025-07-14 04:32:54,454 - telegramreferralpro.languages - WARNING - Missing format key 'referral_link' for message welcome_existing_member in language en
+2025-07-14 04:33:25,244 - telegramreferralpro.bot_handlers - INFO - User 6723278802 (None) started the bot
+2025-07-14 04:33:25,308 - telegramreferralpro.languages - WARNING - Missing format key 'referral_link' for message welcome_existing_member in language en
+2025-07-14 04:33:49,450 - telegramreferralpro.bot_handlers - INFO - User 6723278802 (None) started the bot
+2025-07-14 04:33:49,579 - telegramreferralpro.languages - WARNING - Missing format key 'referral_link' for message welcome_existing_member in language en

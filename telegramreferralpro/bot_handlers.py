@@ -99,16 +99,13 @@ class BotHandlers:
         """Send multilingual welcome message to existing channel members"""
         if not update.message or not user_data:
             return
-        bot_info = update.get_bot()
-        referral_link = escape_markdown(self.referral_system.create_referral_link(
-            bot_info.username or "", user_data['referral_code']
-        ))
         chat_info = await self.telegram_utils.get_chat_info()
         channel_name = escape_markdown(chat_info['title']) if chat_info else "our channel"
+        invite_link = escape_markdown(await self.telegram_utils.create_unique_invite_link(name=f"Referral-{user_data['user_id']}"))
         message = self.multilingual_messages.get_message(
             user_lang, "welcome_existing_member",
             channel_name=channel_name,
-            referral_link=referral_link,
+            channel_link=invite_link,
             target=self.config.referral_target
         )
         await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
@@ -138,17 +135,12 @@ class BotHandlers:
         """Send welcome message to existing channel members"""
         if not update.message or not user_data:
             return
-        bot_info = update.get_bot()
-        referral_link = self.referral_system.create_referral_link(
-            bot_info.username or "", user_data['referral_code']
-        )
-        
         chat_info = await self.telegram_utils.get_chat_info()
         channel_name = chat_info['title'] if chat_info else "our channel"
-        
+        invite_link = await self.telegram_utils.create_unique_invite_link(name=f"Referral-{user_data['user_id']}" )
         message = self.messages.WELCOME_EXISTING_MEMBER.format(
             channel_name=channel_name,
-            referral_link=referral_link,
+            channel_link=invite_link,
             target=self.config.referral_target
         )
         await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
@@ -209,30 +201,54 @@ class BotHandlers:
             status_text=status_text
         )
         
-        await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        keyboard = [
+            [
+                InlineKeyboardButton("📊 My Status", callback_data="my_status"),
+                InlineKeyboardButton("🔄 Refresh", callback_data="refresh_status"),
+            ],
+            [
+                InlineKeyboardButton("🏆 Claim Reward", callback_data="claim_reward"),
+                InlineKeyboardButton("❓ Help", callback_data="help"),
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+    async def language_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        # ...existing code for language selection...
+        pass
+
+    async def button_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        query = update.callback_query
+        user_id = query.from_user.id
+        user_lang = self.language_manager.get_user_language(user_id)
+        await query.answer()
+        if query.data == "my_status" or query.data == "refresh_status":
+            await self.status_command(update, context)
+        elif query.data == "claim_reward":
+            await self.claim_command(update, context)
+        elif query.data == "help":
+            message = self.multilingual_messages.get_message(user_lang, "help_message")
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN)
+        else:
+            await query.edit_message_text("Unknown action.")
     
     async def claim_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /claim command"""
         user_id = update.effective_user.id
-        
         # Check if user exists
         user = self.db.get_user(user_id)
         if not user:
             await update.message.reply_text("❌ Please use /start first to register.")
             return
-        
         # Check if reward already claimed
         if user['reward_claimed']:
-            bot_info = update.get_bot()
-            referral_link = self.referral_system.create_referral_link(
-                bot_info.username, user['referral_code']
-            )
+            invite_link = await self.telegram_utils.create_unique_invite_link(name=f"Referral-{user_id}")
             message = self.messages.ERROR_REWARD_ALREADY_CLAIMED.format(
-                referral_link=referral_link
+                channel_link=invite_link
             )
             await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
             return
-        
         # Check if target reached
         if not self.referral_system.check_referral_target_reached(user_id, self.config.referral_target):
             progress = self.referral_system.get_referral_progress(user_id, self.config.referral_target)
@@ -242,20 +258,13 @@ class BotHandlers:
             )
             await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
             return
-        
         # Claim reward
         self.db.mark_reward_claimed(user_id)
-        
-        bot_info = update.get_bot()
-        referral_link = self.referral_system.create_referral_link(
-            bot_info.username, user['referral_code']
-        )
-        
+        invite_link = await self.telegram_utils.create_unique_invite_link(name=f"Referral-{user_id}")
         message = self.messages.REWARD_CLAIMED.format(
             reward_message=self.config.reward_message,
-            referral_link=referral_link
+            channel_link=invite_link
         )
-        
         await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
         logger.info(f"User {user_id} claimed their reward")
     
