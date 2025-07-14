@@ -5,11 +5,11 @@ import sys
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram.error import TelegramError
 
-from config import load_config
-from database import Database
-from referral_system import ReferralSystem
-from bot_handlers import BotHandlers
-from utils import TelegramUtils, setup_logging
+from .config import load_config
+from .database import Database
+from .referral_system import ReferralSystem
+from .bot_handlers import BotHandlers
+from .utils import TelegramUtils, setup_logging
 
 # Setup logging
 setup_logging()
