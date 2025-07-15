@@ -1,5 +1,5 @@
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters, ChatMemberHandler, CallbackQueryHandler
 from telegram.constants import ParseMode
 from .database import Database
@@ -228,7 +228,6 @@ class BotHandlers:
             status_text=status_text
         )
         
-        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
         keyboard = [
             [
                 InlineKeyboardButton("🔄 Refresh", callback_data="refresh_status"),
@@ -249,10 +248,13 @@ class BotHandlers:
         """Handle inline keyboard button callbacks"""
         query = update.callback_query
         if not query:
+            logger.warning("Received button callback with no query")
             return
             
         user_id = query.from_user.id
         user_lang = self.language_manager.get_user_language(user_id)
+        
+        logger.info(f"Button callback received: {query.data} from user {user_id}")
         await query.answer()
         
         if query.data == "my_status":
@@ -280,10 +282,12 @@ class BotHandlers:
             # Handle success sharing
             await self._show_status_inline(query, user_id, user_lang)
         else:
+            logger.warning(f"Unknown callback data: {query.data}")
             await query.edit_message_text("Unknown action.")
     
     async def _show_status_inline(self, query, user_id: int, user_lang: str) -> None:
         """Show status message inline"""
+        try:
         # Check if user exists
         user = self.db.get_user(user_id)
         if not user:
@@ -346,9 +350,13 @@ class BotHandlers:
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+        except Exception as e:
+            logger.error(f"Error in _show_status_inline: {e}")
+            await query.edit_message_text("❌ An error occurred. Please try again.")
     
     async def _handle_claim_inline(self, query, user_id: int, user_lang: str) -> None:
         """Handle reward claiming inline"""
+        try:
         # Check if user exists
         user = self.db.get_user(user_id)
         if not user:
@@ -410,9 +418,13 @@ class BotHandlers:
         
         await query.edit_message_text(message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
         logger.info(f"User {user_id} claimed their reward via inline button")
+        except Exception as e:
+            logger.error(f"Error in _handle_claim_inline: {e}")
+            await query.edit_message_text("❌ An error occurred. Please try again.")
     
     async def _show_referral_link_inline(self, query, user_id: int, user_lang: str) -> None:
         """Show user's referral link inline"""
+        try:
         user = self.db.get_user(user_id)
         if not user:
             message = self.multilingual_messages.get_message(user_lang, "error_register_first", fallback="❌ Please use /start first to register.")
@@ -638,6 +650,9 @@ class BotHandlers:
                             if progress['target_reached'] and not referrer['reward_claimed']:
                                 notify_message = self.messages.REWARD_AVAILABLE
                                 await self.telegram_utils.send_message_safe(referrer_id, notify_message)
+        except Exception as e:
+            logger.error(f"Error in _show_referral_link_inline: {e}")
+            await query.edit_message_text("❌ An error occurred. Please try again.")
                             else:
                                 notify_message = f"🎉 Great news! Someone joined using your referral link!\n\nYour progress: {progress['active_referrals']}/{progress['target']}"
                                 await self.telegram_utils.send_message_safe(referrer_id, notify_message)
@@ -670,7 +685,10 @@ class BotHandlers:
             CommandHandler("help", self.help_command),
             CommandHandler("language", self.language_command),
             CommandHandler("admin_stats", self.admin_stats_command),
-            CallbackQueryHandler(self.button_callback, pattern="^(my_status|refresh_status|claim_reward|help|my_link|share_success)$"),
+            # Handle all button callbacks first
+            CallbackQueryHandler(self.button_callback, pattern="^(refresh_status|claim_reward|help|my_link|share_success)$"),
+            # Handle language selection callbacks
             CallbackQueryHandler(self.language_callback, pattern="^lang_"),
+            # Handle chat member updates
             ChatMemberHandler(self.chat_member_updated, ChatMemberHandler.CHAT_MEMBER)
         ]
