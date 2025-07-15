@@ -231,8 +231,8 @@ class BotHandlers:
         from telegram import InlineKeyboardButton, InlineKeyboardMarkup
         keyboard = [
             [
-                InlineKeyboardButton("📊 My Status", callback_data="my_status"),
                 InlineKeyboardButton("🔄 Refresh", callback_data="refresh_status"),
+                InlineKeyboardButton("📊 My Link", callback_data="my_link"),
             ],
             [
                 InlineKeyboardButton("🏆 Claim Reward", callback_data="claim_reward"),
@@ -246,19 +246,211 @@ class BotHandlers:
         pass
 
     async def button_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle inline keyboard button callbacks"""
         query = update.callback_query
+        if not query:
+            return
+            
         user_id = query.from_user.id
         user_lang = self.language_manager.get_user_language(user_id)
         await query.answer()
-        if query.data == "my_status" or query.data == "refresh_status":
-            await self.status_command(update, context)
+        
+        if query.data == "my_status":
+            # Show current status
+            await self._show_status_inline(query, user_id, user_lang)
+        elif query.data == "refresh_status":
+            # Refresh and show updated status
+            await self._show_status_inline(query, user_id, user_lang)
         elif query.data == "claim_reward":
-            await self.claim_command(update, context)
+            # Handle reward claiming
+            await self._handle_claim_inline(query, user_id, user_lang)
         elif query.data == "help":
+            # Show help message
             message = self.multilingual_messages.get_message(user_lang, "help_message")
-            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN)
+            
+            # Create back button
+            keyboard = [[InlineKeyboardButton("🔙 Back to Status", callback_data="refresh_status")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await query.edit_message_text(message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+        elif query.data == "my_link":
+            # Show user's referral link
+            await self._show_referral_link_inline(query, user_id, user_lang)
+        elif query.data == "share_success":
+            # Handle success sharing
+            await self._show_status_inline(query, user_id, user_lang)
         else:
             await query.edit_message_text("Unknown action.")
+    
+    async def _show_status_inline(self, query, user_id: int, user_lang: str) -> None:
+        """Show status message inline"""
+        # Check if user exists
+        user = self.db.get_user(user_id)
+        if not user:
+            message = self.multilingual_messages.get_message(user_lang, "error_register_first", fallback="❌ Please use /start first to register.")
+            await query.edit_message_text(message)
+            return
+        
+        # Check channel membership
+        is_member = await self.telegram_utils.check_channel_membership(user_id)
+        if not is_member:
+            channel_link = self.telegram_utils.get_channel_link()
+            message = self.multilingual_messages.get_message(
+                user_lang, "error_not_channel_member", channel_link=channel_link
+            )
+            await query.edit_message_text(message, parse_mode=ParseMode.MARKDOWN)
+            return
+        
+        # Get referral progress
+        progress = self.referral_system.get_referral_progress(user_id, self.config.referral_target)
+        
+        # Generate progress bar
+        progress_bar_full = self.multilingual_messages.get_message(user_lang, "progress_bar_full")
+        progress_bar_empty = self.multilingual_messages.get_message(user_lang, "progress_bar_empty")
+        filled = int((progress['progress_percentage'] / 100) * 10)
+        empty = 10 - filled
+        progress_bar = progress_bar_full * filled + progress_bar_empty * empty
+        
+        # Get status text
+        if progress['target_reached']:
+            status_text = self.multilingual_messages.get_message(user_lang, "status_target_reached")
+        elif progress['active_referrals'] == 0:
+            status_text = self.multilingual_messages.get_message(user_lang, "status_no_referrals")
+        else:
+            status_text = self.multilingual_messages.get_message(
+                user_lang, "status_progress", remaining=progress['remaining']
+            )
+        
+        message = self.multilingual_messages.get_message(
+            user_lang, "status_message",
+            active_referrals=progress['active_referrals'],
+            target=progress['target'],
+            total_referrals=progress['total_referrals'],
+            remaining=progress['remaining'],
+            progress=int(progress['progress_percentage']),
+            progress_bar=progress_bar,
+            status_text=status_text
+        )
+        
+        # Create keyboard with updated buttons
+        keyboard = [
+            [
+                InlineKeyboardButton("🔄 Refresh", callback_data="refresh_status"),
+                InlineKeyboardButton("📊 My Link", callback_data="my_link"),
+            ],
+            [
+                InlineKeyboardButton("🏆 Claim Reward", callback_data="claim_reward"),
+                InlineKeyboardButton("❓ Help", callback_data="help"),
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+    
+    async def _handle_claim_inline(self, query, user_id: int, user_lang: str) -> None:
+        """Handle reward claiming inline"""
+        # Check if user exists
+        user = self.db.get_user(user_id)
+        if not user:
+            message = self.multilingual_messages.get_message(user_lang, "error_register_first", fallback="❌ Please use /start first to register.")
+            await query.edit_message_text(message)
+            return
+        
+        # Check if reward already claimed
+        if user['reward_claimed']:
+            # Get user's stored invite link
+            stored_invite_link = self.db.get_invite_link(user_id)
+            invite_link = stored_invite_link or self.telegram_utils.get_channel_link()
+            message = self.multilingual_messages.get_message(
+                user_lang, "error_reward_already_claimed", referral_link=invite_link
+            )
+            
+            # Create back button
+            keyboard = [[InlineKeyboardButton("🔙 Back to Status", callback_data="refresh_status")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await query.edit_message_text(message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+            return
+        
+        # Check if target reached
+        if not self.referral_system.check_referral_target_reached(user_id, self.config.referral_target):
+            progress = self.referral_system.get_referral_progress(user_id, self.config.referral_target)
+            message = self.multilingual_messages.get_message(
+                user_lang, "error_reward_not_available",
+                active_referrals=progress['active_referrals'],
+                target=progress['target']
+            )
+            
+            # Create back button
+            keyboard = [[InlineKeyboardButton("🔙 Back to Status", callback_data="refresh_status")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await query.edit_message_text(message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+            return
+        
+        # Claim reward
+        self.db.mark_reward_claimed(user_id)
+        
+        # Get user's stored invite link
+        stored_invite_link = self.db.get_invite_link(user_id)
+        invite_link = stored_invite_link or self.telegram_utils.get_channel_link()
+        
+        message = self.multilingual_messages.get_message(
+            user_lang, "reward_claimed",
+            reward_message=self.config.reward_message,
+            referral_link=invite_link
+        )
+        
+        # Create celebration keyboard
+        keyboard = [
+            [InlineKeyboardButton("🎉 Share Success", callback_data="share_success")],
+            [InlineKeyboardButton("📊 View Status", callback_data="refresh_status")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+        logger.info(f"User {user_id} claimed their reward via inline button")
+    
+    async def _show_referral_link_inline(self, query, user_id: int, user_lang: str) -> None:
+        """Show user's referral link inline"""
+        user = self.db.get_user(user_id)
+        if not user:
+            message = self.multilingual_messages.get_message(user_lang, "error_register_first", fallback="❌ Please use /start first to register.")
+            await query.edit_message_text(message)
+            return
+        
+        # Get user's stored invite link
+        stored_invite_link = self.db.get_invite_link(user_id)
+        if stored_invite_link:
+            invite_link = stored_invite_link
+        else:
+            # Create new unique invite link if not exists
+            referral_code = user['referral_code']
+            invite_link_name = f"Referral-{referral_code}"
+            invite_link = await self.telegram_utils.create_unique_invite_link(name=invite_link_name)
+            
+            # Store the invite link in database
+            self.db.store_invite_link(user_id, referral_code, invite_link, invite_link_name)
+        
+        message = f"""
+🔗 **Your Unique Referral Link**
+
+{invite_link}
+
+📋 **How to use:**
+1. Copy the link above
+2. Share it with friends
+3. When they join using your link, you get credit
+4. Reach {self.config.referral_target} referrals to claim your reward!
+
+💡 **Tip:** Share this link in groups, social media, or directly with friends!
+"""
+        
+        # Create back button
+        keyboard = [[InlineKeyboardButton("🔙 Back to Status", callback_data="refresh_status")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(message, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
     
     async def claim_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /claim command"""
@@ -478,6 +670,7 @@ class BotHandlers:
             CommandHandler("help", self.help_command),
             CommandHandler("language", self.language_command),
             CommandHandler("admin_stats", self.admin_stats_command),
+            CallbackQueryHandler(self.button_callback, pattern="^(my_status|refresh_status|claim_reward|help|my_link|share_success)$"),
             CallbackQueryHandler(self.language_callback, pattern="^lang_"),
             ChatMemberHandler(self.chat_member_updated, ChatMemberHandler.CHAT_MEMBER)
         ]
