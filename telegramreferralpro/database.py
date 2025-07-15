@@ -57,6 +57,20 @@ class Database:
                 )
             ''')
             
+            # Invite links table to track unique invite links
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS invite_links (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    referral_code TEXT,
+                    invite_link TEXT UNIQUE,
+                    invite_link_name TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    FOREIGN KEY (user_id) REFERENCES users (user_id)
+                )
+            ''')
+            
             conn.commit()
             logger.info("Database initialized successfully")
     
@@ -232,3 +246,50 @@ class Database:
         except Exception as e:
             logger.error(f"Error getting channel members count: {e}")
             return 0
+    
+    def store_invite_link(self, user_id: int, referral_code: str, invite_link: str, invite_link_name: str) -> bool:
+        """Store a user's unique invite link"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT OR REPLACE INTO invite_links 
+                    (user_id, referral_code, invite_link, invite_link_name)
+                    VALUES (?, ?, ?, ?)
+                ''', (user_id, referral_code, invite_link, invite_link_name))
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error storing invite link for user {user_id}: {e}")
+            return False
+    
+    def get_invite_link(self, user_id: int) -> Optional[str]:
+        """Get user's stored invite link"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT invite_link FROM invite_links 
+                    WHERE user_id = ? AND is_active = TRUE 
+                    ORDER BY created_at DESC LIMIT 1
+                ''', (user_id,))
+                result = cursor.fetchone()
+                return result[0] if result else None
+        except Exception as e:
+            logger.error(f"Error getting invite link for user {user_id}: {e}")
+            return None
+    
+    def get_referrer_by_invite_link_name(self, invite_link_name: str) -> Optional[int]:
+        """Get referrer user ID by invite link name"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT user_id FROM invite_links 
+                    WHERE invite_link_name = ? AND is_active = TRUE
+                ''', (invite_link_name,))
+                result = cursor.fetchone()
+                return result[0] if result else None
+        except Exception as e:
+            logger.error(f"Error getting referrer by invite link name {invite_link_name}: {e}")
+            return None

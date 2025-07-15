@@ -101,11 +101,25 @@ class BotHandlers:
             return
         chat_info = await self.telegram_utils.get_chat_info()
         channel_name = escape_markdown(chat_info['title']) if chat_info else "our channel"
-        invite_link = escape_markdown(await self.telegram_utils.create_unique_invite_link(name=f"Referral-{user_data['user_id']}"))
+        
+        # Get or create unique invite link for this user
+        stored_invite_link = self.db.get_invite_link(user_data['user_id'])
+        if stored_invite_link:
+            invite_link = escape_markdown(stored_invite_link)
+        else:
+            # Create new unique invite link
+            referral_code = user_data['referral_code']
+            invite_link_name = f"Referral-{referral_code}"
+            raw_invite_link = await self.telegram_utils.create_unique_invite_link(name=invite_link_name)
+            invite_link = escape_markdown(raw_invite_link)
+            
+            # Store the invite link in database
+            self.db.store_invite_link(user_data['user_id'], referral_code, raw_invite_link, invite_link_name)
+        
         message = self.multilingual_messages.get_message(
             user_lang, "welcome_existing_member",
             channel_name=channel_name,
-            channel_link=invite_link,
+            referral_link=invite_link,
             target=self.config.referral_target
         )
         await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
@@ -137,10 +151,23 @@ class BotHandlers:
             return
         chat_info = await self.telegram_utils.get_chat_info()
         channel_name = chat_info['title'] if chat_info else "our channel"
-        invite_link = await self.telegram_utils.create_unique_invite_link(name=f"Referral-{user_data['user_id']}" )
+        
+        # Get or create unique invite link for this user
+        stored_invite_link = self.db.get_invite_link(user_data['user_id'])
+        if stored_invite_link:
+            invite_link = stored_invite_link
+        else:
+            # Create new unique invite link
+            referral_code = user_data['referral_code']
+            invite_link_name = f"Referral-{referral_code}"
+            invite_link = await self.telegram_utils.create_unique_invite_link(name=invite_link_name)
+            
+            # Store the invite link in database
+            self.db.store_invite_link(user_data['user_id'], referral_code, invite_link, invite_link_name)
+        
         message = self.messages.WELCOME_EXISTING_MEMBER.format(
             channel_name=channel_name,
-            channel_link=invite_link,
+            referral_link=invite_link,
             target=self.config.referral_target
         )
         await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
@@ -243,9 +270,11 @@ class BotHandlers:
             return
         # Check if reward already claimed
         if user['reward_claimed']:
-            invite_link = await self.telegram_utils.create_unique_invite_link(name=f"Referral-{user_id}")
+            # Get user's stored invite link
+            stored_invite_link = self.db.get_invite_link(user_id)
+            invite_link = stored_invite_link or self.telegram_utils.get_channel_link()
             message = self.messages.ERROR_REWARD_ALREADY_CLAIMED.format(
-                channel_link=invite_link
+                referral_link=invite_link
             )
             await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
             return
@@ -260,10 +289,12 @@ class BotHandlers:
             return
         # Claim reward
         self.db.mark_reward_claimed(user_id)
-        invite_link = await self.telegram_utils.create_unique_invite_link(name=f"Referral-{user_id}")
+        # Get user's stored invite link
+        stored_invite_link = self.db.get_invite_link(user_id)
+        invite_link = stored_invite_link or self.telegram_utils.get_channel_link()
         message = self.messages.REWARD_CLAIMED.format(
             reward_message=self.config.reward_message,
-            channel_link=invite_link
+            referral_link=invite_link
         )
         await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
         logger.info(f"User {user_id} claimed their reward")
@@ -380,10 +411,19 @@ class BotHandlers:
             user = self.db.get_user(user_id)
             if user:
                 try:
-                    bot_info = await context.bot.get_me()
-                    referral_link = self.referral_system.create_referral_link(
-                        bot_info.username, user['referral_code']
-                    )
+                    # Get or create unique invite link for this user
+                    stored_invite_link = self.db.get_invite_link(user_id)
+                    if stored_invite_link:
+                        referral_link = stored_invite_link
+                    else:
+                        # Create new unique invite link
+                        referral_code = user['referral_code']
+                        invite_link_name = f"Referral-{referral_code}"
+                        referral_link = await self.telegram_utils.create_unique_invite_link(name=invite_link_name)
+                        
+                        # Store the invite link in database
+                        self.db.store_invite_link(user_id, referral_code, referral_link, invite_link_name)
+                    
                     chat_info = await self.telegram_utils.get_chat_info()
                     channel_name = chat_info['title'] if chat_info else "our channel"
                     # Multilingual welcome message

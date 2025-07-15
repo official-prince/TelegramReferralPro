@@ -18,9 +18,18 @@ class ReferralSystem:
         hash_code = hashlib.sha256(raw_code.encode()).hexdigest()[:12]
         return f"ref_{hash_code}"
     
-    def create_referral_link(self, bot_username: str, referral_code: str) -> str:
-        """Create a referral link for sharing"""
-        return f"https://t.me/{bot_username}?start={referral_code}"
+    async def create_referral_invite_link(self, telegram_utils, user_id: int, referral_code: str) -> str:
+        """Create a unique channel invite link for referrals"""
+        try:
+            # Create a unique invite link with the user's referral code as the name
+            invite_link = await telegram_utils.create_unique_invite_link(
+                name=f"Referral-{referral_code}"
+            )
+            return invite_link
+        except Exception as e:
+            logger.error(f"Error creating referral invite link for user {user_id}: {e}")
+            # Fallback to regular channel link
+            return telegram_utils.get_channel_link()
     
     def process_referral(self, referrer_code: str, new_user_id: int) -> Tuple[bool, str]:
         """Process a new referral"""
@@ -56,6 +65,16 @@ class ReferralSystem:
         except Exception as e:
             logger.error(f"Error processing referral: {e}")
             return False, "An error occurred while processing the referral"
+    
+    def extract_referral_code_from_invite_link(self, invite_link: str) -> Optional[str]:
+        """Extract referral code from invite link name"""
+        try:
+            # The invite link name format is "Referral-{referral_code}"
+            # We need to track this mapping in the database
+            return None  # This will be handled by tracking invite link usage
+        except Exception as e:
+            logger.error(f"Error extracting referral code from invite link: {e}")
+            return None
     
     def check_referral_target_reached(self, user_id: int, target: int) -> bool:
         """Check if user has reached their referral target"""

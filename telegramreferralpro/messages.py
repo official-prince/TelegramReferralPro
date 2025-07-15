@@ -16,8 +16,8 @@ Click the link above to join the channel, then come back here.
 🎉 Welcome back! I can see you're already a member of {channel_name}.
 
 
-Here's your referral link (channel invite):
-{channel_link}
+Here's your unique referral link:
+{referral_link}
 
 📋 **Your Mission:**
 Share this link with friends and get {target} people to join the channel using your link to earn your reward!
@@ -34,8 +34,8 @@ Use /status to check your progress anytime!
 ✅ Great! You've successfully joined {channel_name}!
 
 
-Here's your referral link (channel invite):
-{channel_link}
+Here's your unique referral link:
+{referral_link}
 
 📋 **Your Mission:**
 Copy and share this link with friends and get {target} people to join the channel using your link to earn your reward!
@@ -88,7 +88,7 @@ Use /claim to get your reward!
 
 Thank you for helping grow our community! Keep sharing your referral link to help even more people discover our channel.
 
-Your referral link is still active: {channel_link}
+Your referral link is still active: {referral_link}
 """
     
     HELP_MESSAGE = """
@@ -124,7 +124,7 @@ After joining, come back and use /start again.
     ERROR_REWARD_ALREADY_CLAIMED = """
 ✅ You've already claimed your reward!
 
-Your referral link is still active if you want to keep helping grow the community: {channel_link}
+Your referral link is still active if you want to keep helping grow the community: {referral_link}
 """
     
     ERROR_REWARD_NOT_AVAILABLE = """
