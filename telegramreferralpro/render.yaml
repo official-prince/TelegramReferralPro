@@ -7,8 +7,8 @@ services:
     startCommand: "python -m telegramreferralpro.main"
     envVars:
       - key: BOT_TOKEN
-        value: your_bot_token_here
+        value: 7595389836:AAF709eAbdl0oQlSLmjY6_lxsLOlhQZ6H3M
       - key: CHANNEL_ID
-        value: your_channel_id_here
+        value: -1002713207409
       - key: CHANNEL_USERNAME
-        value: your_channel_username
+        value: @EarnProElites
