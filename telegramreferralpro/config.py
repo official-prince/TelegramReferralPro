@@ -1,9 +1,13 @@
 import os
 from dataclasses import dataclass
 from typing import Optional
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except Exception:
+    def load_dotenv(*args, **kwargs):  # fallback no-op if python-dotenv is unavailable
+        return False
 
-# Load environment variables from .env file
+# Load environment variables from .env file (no-op if dotenv not installed)
 load_dotenv()
 
 @dataclass

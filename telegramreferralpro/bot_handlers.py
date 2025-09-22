@@ -598,22 +598,24 @@ class BotHandlers:
     async def chat_member_updated(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle chat member updates (join/leave events)"""
         result = update.chat_member
-        
+        if not result:
+            return
+
         # Only process events for our target channel
         if str(result.chat.id) != self.config.channel_id:
             return
-        
+
         user_id = result.new_chat_member.user.id
         old_status = result.old_chat_member.status
         new_status = result.new_chat_member.status
-        
+
         # User joined the channel
         if old_status in ['left', 'kicked'] and new_status in ['member', 'administrator', 'creator']:
             logger.info(f"User {user_id} joined the channel")
-            
+
             # Update database and check for referral
             referrer_id = self.referral_system.handle_user_joined_channel(user_id)
-            
+
             # Send welcome message if user exists in our system
             user = self.db.get_user(user_id)
             if user:
@@ -627,10 +629,10 @@ class BotHandlers:
                         referral_code = user['referral_code']
                         invite_link_name = f"Referral-{referral_code}"
                         referral_link = await self.telegram_utils.create_unique_invite_link(name=invite_link_name)
-                        
+
                         # Store the invite link in database
                         self.db.store_invite_link(user_id, referral_code, referral_link, invite_link_name)
-                    
+
                     chat_info = await self.telegram_utils.get_chat_info()
                     channel_name = chat_info['title'] if chat_info else "our channel"
                     # Multilingual welcome message
@@ -643,41 +645,41 @@ class BotHandlers:
                         target=self.config.referral_target
                     )
                     await self.telegram_utils.send_message_safe(user_id, message)
-                    
+
                     # Notify referrer if applicable
                     if referrer_id:
                         referrer = self.db.get_user(referrer_id)
                         if referrer:
                             progress = self.referral_system.get_referral_progress(referrer_id, self.config.referral_target)
-                            
                             if progress['target_reached'] and not referrer['reward_claimed']:
                                 notify_message = self.messages.REWARD_AVAILABLE
-                                await self.telegram_utils.send_message_safe(referrer_id, notify_message)
-        except Exception as e:
-            logger.error(f"Error in _show_referral_link_inline: {e}")
-            await query.edit_message_text("❌ An error occurred. Please try again.")
                             else:
-                                notify_message = f"🎉 Great news! Someone joined using your referral link!\n\nYour progress: {progress['active_referrals']}/{progress['target']}"
-                                await self.telegram_utils.send_message_safe(referrer_id, notify_message)
-                
+                                notify_message = (
+                                    "🎉 Great news! Someone joined using your referral link!\n\n"
+                                    f"Your progress: {progress['active_referrals']}/{progress['target']}"
+                                )
+                            await self.telegram_utils.send_message_safe(referrer_id, notify_message)
                 except Exception as e:
-                    logger.error(f"Error sending welcome message to user {user_id}: {e}")
-        
+                    logger.error(f"Error sending welcome or notify message for user {user_id}: {e}")
+
         # User left the channel
         elif old_status in ['member', 'administrator', 'creator'] and new_status in ['left', 'kicked']:
             logger.info(f"User {user_id} left the channel")
-            
+
             # Update database and notify affected referrers
             affected_referrers = self.referral_system.handle_user_left_channel(user_id)
-            
+
             # Notify referrers about the change
-            for referrer_id in affected_referrers:
+            for ref_id in affected_referrers:
                 try:
-                    progress = self.referral_system.get_referral_progress(referrer_id, self.config.referral_target)
-                    notify_message = f"📉 One of your referrals left the channel.\n\nYour current progress: {progress['active_referrals']}/{progress['target']}"
-                    await self.telegram_utils.send_message_safe(referrer_id, notify_message)
+                    progress = self.referral_system.get_referral_progress(ref_id, self.config.referral_target)
+                    notify_message = (
+                        "📉 One of your referrals left the channel.\n\n"
+                        f"Your current progress: {progress['active_referrals']}/{progress['target']}"
+                    )
+                    await self.telegram_utils.send_message_safe(ref_id, notify_message)
                 except Exception as e:
-                    logger.error(f"Error notifying referrer {referrer_id}: {e}")
+                    logger.error(f"Error notifying referrer {ref_id}: {e}")
     
     def get_handlers(self) -> list:
         """Get all bot handlers"""
