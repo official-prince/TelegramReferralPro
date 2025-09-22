@@ -1,0 +1,28 @@
+{
+  "name": "background-worker-project",
+  "version": "1.0.0",
+  "description": "A background worker for processing tasks asynchronously.",
+  "main": "src/worker.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/worker.js"
+  },
+  "dependencies": {
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/background-worker-project.git"
+  },
+  "keywords": [
+    "background",
+    "worker",
+    "asynchronous",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
